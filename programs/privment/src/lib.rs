@@ -1,4 +1,8 @@
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
+mod instructions;
+mod state;
+use crate::instructions::*;
 
 declare_id!("BGGhrLBFZfQgg7aB4pKr84hSDsLKsL4ZzRkaDAUoVrfQ");
 
@@ -6,11 +10,11 @@ declare_id!("BGGhrLBFZfQgg7aB4pKr84hSDsLKsL4ZzRkaDAUoVrfQ");
 pub mod privment {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
+    pub fn register(ctx: Context<Register>) -> Result<()> {
+        ctx.accounts.register_user(&ctx.bumps)
+    }
+
+    pub fn create_invoice(ctx: Context<Invoice>, to: Pubkey) -> Result<()>{
+        ctx.accounts.create_invoice(to ,&ctx.bumps)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
