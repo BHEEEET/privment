@@ -2,14 +2,13 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
-pub struct InvoiceAccount{
+pub struct Invoice{
     pub creator: Pubkey,
+    pub creator_account_bump: u8,
     pub client: Pubkey,
-    #[max_len(50)] 
-    pub encrypted_data: String,
+    pub client_account_bump: u8,
+    pub amount: u64,
     pub paid: bool,
     pub created_at: i64,
-    #[max_len(50)] 
-    pub invoice_hash: String,
     pub bump: u8,
 }

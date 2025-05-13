@@ -1,5 +1,5 @@
 [workspace]
-members = [ "client/rust",
+members = [
     "programs/*"
 ]
 resolver = "2"

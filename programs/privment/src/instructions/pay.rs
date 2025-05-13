@@ -1,120 +1,126 @@
 use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
-use solana_sdk::{
-    signature::{Keypair, Signer as KeySigner},
-    transaction::Transaction
-};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token_interface::{mint_to, transfer_checked, Token2022, TokenAccount, TransferChecked},
-};
-use spl_token_2022::extension::confidential_transfer::instruction as confidential_ix;
-use spl_token_2022::id as token_22_program_id;
-use spl_token_client::{
-    token::Token,
-    
+    token_interface::{mint_to, transfer_checked, Token2022, TokenAccount, TransferChecked, MintTo, Mint},
+
 };
 
-use crate::state::ReceiptAccount;
+use crate::state::Invoice;
+use crate::state::Receipt;
+use crate::state::UserAccount;
 
 #[derive(Accounts)]
 pub struct Pay<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
+
     #[account(mut)]
     pub client: Signer<'info>,
-    #[account(mut)]
-    pub mint_a: Signer<'info>,
-    #[account(mut)]
-    pub creator_ata_a: AccountInfo<'info>,
+
     #[account(
-        init_if_needed,
+        seeds = [b"token", client.key().as_ref()],
+        bump
+    )]
+    pub mint_a: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        init,
         payer = client,
         associated_token::mint = mint_a,
         associated_token::authority = client,
         associated_token::token_program = token_program,
     )]
     pub client_ata_a: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = client,
+        associated_token::mint = mint_a,
+        associated_token::authority = creator,
+        associated_token::token_program = token_program,
+    )]
+    pub creator_ata_a: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        seeds = [b"user", creator.key().as_ref()],
+        bump = invoice.creator_account_bump,
+    )]
+    pub creator_account: Account<'info, UserAccount>,
+
+    #[account(
+        seeds = [b"user", client.key().as_ref()],
+        bump = invoice.client_account_bump,
+    )]
+    pub client_account: Account<'info, UserAccount>,
+
+    #[account(
+        seeds = [b"invoice", creator.key().as_ref()],
+        bump,
+    )]
+    pub invoice: Account<'info, Invoice>,
+
     #[account(
         init,
         payer = creator,
-        seeds = [b"receipt", creator.key().as_ref()],
+        seeds = [b"receipt",invoice.key().as_ref(),  client.key().as_ref()],
         bump,
-        space = 8 + ReceiptAccount::INIT_SPACE,
+        space = 8 + Receipt::INIT_SPACE,
     )]
-    pub receipt_account: Account<'info, ReceiptAccount>,
+    pub receipt: Account<'info, Receipt>,
+
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token2022>,
+
     pub associated_token_program: Program<'info, AssociatedToken>,
+
+    pub token_program: Program<'info, Token2022>,
 }
 
 impl<'info> Pay<'info> {
-    pub fn mint_tokens(&self) -> Result<()> {
-        // let space = match ExtensionType::try_calculate_account_len::<Mint>(&[
-        //     ExtensionType::ConfidentialTransferMint,
-        // ]) {
-        //     Ok(space) => space,
-        //     Err(e) => return Err(e.into()), // propagate the error
-        // };
+    pub fn mint_tokens(&self, amount: u64) -> Result<()>{
+        let cpi_program = self.token_program.to_account_info();
 
-        let ix = confidential_ix::initialize_mint(
-            &self.token_program.key(),
-            &self.mint_a.key(),
-            Some(self.client.key()),
-            true,
-            None,
-        );
+        let cpi_accounts = MintTo{
+            mint: self.mint_a.to_account_info(),
+            to: self.client_ata_a.to_account_info(),
+            authority: self.client.to_account_info(),
+        };
 
-        let tx = Transaction::new_signed_with_payer(
-            &[ix], 
-            Some(&self.client.key()), 
-            &[&self.client], 
-            recent_blockhash
-        );
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-
-
-        Ok(())
+        mint_to(cpi_ctx, amount)
     }
 
-    // pub fn deposit_tokens(&self, amount: u64) -> Result<()> {
-    //     let cpi_program = self.token_program.to_account_info();
+    pub fn pay(&mut self, bumps: &PayBumps) -> Result<()> {
+        // send tokens
+        let transfer_accounts = TransferChecked{
+            from: self.client_ata_a.to_account_info(),
+            to: self.creator_ata_a.to_account_info(),
+            authority: self.client.to_account_info(),
+            mint: self.mint_a.to_account_info(),
+        };
 
-    //     let cpi_accounts = TransferChecked {
-    //         from: self.client_ata_a.to_account_info(),
-    //         mint: self.mint_a.to_account_info(),
-    //         to: self.creator_ata_a.to_account_info(),
-    //         authority: self.client.to_account_info(),
-    //     };
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), transfer_accounts);
 
-    //     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        transfer_checked(cpi_ctx, self.invoice.amount, self.mint_a.decimals)?;
 
-    //     transfer_checked(cpi_ctx, amount, self.mint_a.decimals)
-    // }
+        // change invoice "paid" state
+        self.invoice.paid = true;
 
-    // pub fn pay(&self, amount: u64) -> Result<()> {
-    //     let cpi_program = self.system_program.to_account_info();
+        // change state of client account
+        self.client_account.total_payed += self.invoice.amount;
 
-    //     let cpi_account = TransferChecked {
-    //         from: self.client.to_account_info(),
-    //         mint: self.mint_a.to_account_info(),
-    //         to: self.creator.to_account_info(),
-    //         authority: self.client.to_account_info(),
-    //     };
+        // change state of creator account
+        self.creator_account.total_received += self.invoice.amount;
 
-    //     let cpi_ctx = CpiContext::new(cpi_program, cpi_account);
+        // create receipt
+        self.receipt.set_inner(Receipt {
+            from: self.client.key(),
+            to: self.creator.key(),
+            amount: self.invoice.amount,
+            paid_at: Clock::get()?.unix_timestamp,
+            bump: bumps.receipt,
+        });
 
-    //     transfer_checked(cpi_ctx, amount, self.mint_a.decimals)?;
-
-    //     Ok(())
-    // }
-
-    pub fn create_receipt(
-        &mut self,
-        encrypted_data: String,
-        invoice_hash: String,
-        bumps: PayBumps,
-    ) -> Result<()> {
         Ok(())
     }
 }
