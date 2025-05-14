@@ -1,4 +1,4 @@
-![Privment Logo](./public/logo/privment_black_white_smaller.png){ width=200px }
+<img src="./public/logo/privment_black_white_smaller.png" alt="Privment Logo" width="200"/>
 # Privment
 Privment (Private Payment) is a protocol that is aimed to encrypt Solana.
 
