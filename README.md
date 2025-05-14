@@ -1,15 +1,33 @@
+![Privment Logo](./public/logo/privment_transparent_black.png)
 # Privment
+Privment (Private Payment) is a protocol that is aimed to encrypt Solana.
 
+## MVP 
+Invoice and payment program
+
+## Roadmap
+- [x] Invoice and payments
+  - [x] Creation of user account
+  - [x] Creation of invoice
+  - [x] Being able to pay a invoice
+  - [x] Creation of receipt
+- [ ] Confidential Transfer
+- [ ] Invoice Encryption
+- [ ] ZK compression
+  - [ ] Account compression
+  - [ ] Token compression
 
 ## Dependencies
-- Perl
+- When including RSA keys
+  - Perl
 
 ## Considerations
 - Forward secrecy
   - Per session key
-- Quantum
-- Homomorphic
+- Quantum proof
+- Homomorphic encryption
 
+# Implementation Examples
 https://github.com/solana-developers/program-examples/tree/main/tokens/token-2022/nft-meta-data-pointer/anchor-example 
 
 https://github.com/solana-developers/program-examples/tree/main/tokens/token-2022
