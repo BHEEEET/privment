@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{mint_to, transfer_checked, Token2022, TokenAccount, TransferChecked, MintTo, Mint},
-
 };
 
 use crate::state::Invoice;
@@ -12,16 +11,13 @@ use crate::state::UserAccount;
 #[derive(Accounts)]
 pub struct Pay<'info> {
     #[account(mut)]
-    pub creator: Signer<'info>,
+    pub creator: SystemAccount<'info>,
 
     #[account(mut)]
     pub client: Signer<'info>,
 
-    #[account(
-        seeds = [b"token", client.key().as_ref()],
-        bump
-    )]
-    pub mint_a: InterfaceAccount<'info, Mint>,
+    #[account(mut)]
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         init,
@@ -30,7 +26,7 @@ pub struct Pay<'info> {
         associated_token::authority = client,
         associated_token::token_program = token_program,
     )]
-    pub client_ata_a: InterfaceAccount<'info, TokenAccount>,
+    pub client_ata_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         init_if_needed,
@@ -39,21 +35,24 @@ pub struct Pay<'info> {
         associated_token::authority = creator,
         associated_token::token_program = token_program,
     )]
-    pub creator_ata_a: InterfaceAccount<'info, TokenAccount>,
+    pub creator_ata_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [b"user", creator.key().as_ref()],
         bump = invoice.creator_account_bump,
     )]
     pub creator_account: Account<'info, UserAccount>,
 
     #[account(
+        mut,
         seeds = [b"user", client.key().as_ref()],
         bump = invoice.client_account_bump,
     )]
     pub client_account: Account<'info, UserAccount>,
 
     #[account(
+        mut,
         seeds = [b"invoice", creator.key().as_ref()],
         bump,
     )]
@@ -76,7 +75,7 @@ pub struct Pay<'info> {
 }
 
 impl<'info> Pay<'info> {
-    pub fn mint_tokens(&self, amount: u64) -> Result<()>{
+    pub fn mint_tokens(&self, mint_amount: u64) -> Result<()>{
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accounts = MintTo{
@@ -87,7 +86,7 @@ impl<'info> Pay<'info> {
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        mint_to(cpi_ctx, amount)
+        mint_to(cpi_ctx, mint_amount)
     }
 
     pub fn pay(&mut self, bumps: &PayBumps) -> Result<()> {
