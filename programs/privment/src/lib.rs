@@ -4,7 +4,7 @@ mod instructions;
 mod state;
 use crate::instructions::*;
 
-declare_id!("BGGhrLBFZfQgg7aB4pKr84hSDsLKsL4ZzRkaDAUoVrfQ");
+declare_id!("C3qyHGtVXDTDqKR7ng1Q4ikYK2mKxyqtZLcWpgA1fKZV");
 
 #[program]
 pub mod privment {
@@ -18,8 +18,8 @@ pub mod privment {
         ctx.accounts.init_invoice(amount ,&ctx.bumps)
     }
 
-    pub fn pay_invoice(ctx: Context<Pay>, amount: u64) -> Result<()>{
-        ctx.accounts.mint_tokens(amount)?;
+    pub fn pay_invoice(ctx: Context<Pay>, mint_amount: u64) -> Result<()>{
+        ctx.accounts.mint_tokens(mint_amount)?;
         ctx.accounts.pay(&ctx.bumps)
     }
 }
