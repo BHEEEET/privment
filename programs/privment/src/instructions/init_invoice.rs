@@ -6,7 +6,7 @@ use crate::state::UserAccount;
 pub struct InitInvoice<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
-    pub client: Signer<'info>,
+    pub client: SystemAccount<'info>,
     #[account(
         seeds = [b"user", creator.key().as_ref()],
         bump,
