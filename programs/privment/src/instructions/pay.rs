@@ -60,7 +60,7 @@ pub struct Pay<'info> {
 
     #[account(
         init,
-        payer = creator,
+        payer = client,
         seeds = [b"receipt",invoice.key().as_ref(),  client.key().as_ref()],
         bump,
         space = 8 + Receipt::INIT_SPACE,

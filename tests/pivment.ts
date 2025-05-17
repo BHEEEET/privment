@@ -18,17 +18,19 @@ import { Program } from "@coral-xyz/anchor";
 
 
 describe("Privment", () => {
-    const keypairPath = "Turbine-wallet.json";
-    const secretKeyString = readFileSync(keypairPath, "utf8");
-    const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
-    const keypair = Keypair.fromSecretKey(secretKey);
-    const wallet = new anchor.Wallet(keypair);
+    //const keypairPath = "Turbine-wallet.json";
+    //const secretKeyString = readFileSync(keypairPath, "utf8");
+    //const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    //const keypair = Keypair.fromSecretKey(secretKey);
+    //const wallet = new anchor.Wallet(keypair);
 
     const connection = new anchor.web3.Connection("http://localhost:8899", "confirmed");
     // Set provider
-    const provider = new anchor.AnchorProvider(connection, wallet, {
-        preflightCommitment: "processed",
-    });
+    //const provider = new anchor.AnchorProvider(connection, wallet, {
+    //    preflightCommitment: "processed",
+    //});
+    const provider = anchor.AnchorProvider.env();
+
     anchor.setProvider(provider);
 
     const program = anchor.workspace.privment as Program<Privment>;
@@ -80,41 +82,23 @@ describe("Privment", () => {
         )
 
         console.log("✅ Mint completed");
-
-        // clientAtaA = (await createAssociatedTokenAccount(
-        //     provider.connection,
-        //     client,
-        //     mintA,
-        //     client.publicKey,
-        //     undefined,
-        //     TOKEN_2022_PROGRAM_ID
-        // ));
-    
-        // creatorAtaA = (await createAssociatedTokenAccount(
-        //     provider.connection,
-        //     client,
-        //     mintA,
-        //     creator.publicKey,
-        //     undefined,
-        //     TOKEN_2022_PROGRAM_ID
-        // ));
-
-        console.log("✅ Ata's completed");
     });
 
-
+    // Creating creator_account pda
     const [creator_account, creator_account_bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from("user"),
         creator.publicKey.toBytes()],
         program.programId
     );
 
+    // Creating client_account pda
     const [client_account, client_account_bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from("user"),
         client.publicKey.toBytes()],
         program.programId
     );
 
+    // Creating invoice pda
     const invoice = anchor.web3.PublicKey.findProgramAddressSync(
         [
             Buffer.from("invoice"),
@@ -123,6 +107,7 @@ describe("Privment", () => {
         program.programId
     )[0];
 
+    // Creating receipt pda
     const receipt = anchor.web3.PublicKey.findProgramAddressSync(
         [
             Buffer.from("receipt"),
@@ -199,7 +184,7 @@ describe("Privment", () => {
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 tokenProgram: TOKEN_2022_PROGRAM_ID,
             })
-            .signers([client, creator])
+            .signers([client])
             .rpc()
 
         console.log("tx:", tx)
