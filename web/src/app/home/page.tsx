@@ -57,9 +57,27 @@ export default function HomePage() {
     )
   }
 
-  if (!session) {
-    return null
-  }
+if (!session) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
+      <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 shadow-lg w-full max-w-sm">
+        <h2 className="text-xl font-semibold text-white mb-2">Access Restricted</h2>
+        <p className="text-sm text-gray-300 mb-4">
+          You need to be signed in to view this page. Please log in to continue.
+        </p>
+        <a
+          href="/login"
+          className="inline-block w-full text-center px-4 py-2 bg-white text-neutral-900 font-medium rounded-md hover:bg-gray-100 transition"
+        >
+          Go to Login
+        </a>
+      </div>
+    </div>
+  )
+}
+
+
+
 
   return (
     <div className="min-h-screen bg-black">

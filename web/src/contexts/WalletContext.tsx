@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { WalletAdapterProps } from '@solana/wallet-adapter-base'
-import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
+import { ConnectionProvider, useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { clusterApiUrl } from '@solana/web3.js'
@@ -26,11 +26,13 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
   const wallets = [new PhantomWalletAdapter()]
 
   return (
-    <WalletProvider wallets={wallets} endpoint={endpoint}>
-      <WalletModalProvider>
-        {children}
-      </WalletModalProvider>
-    </WalletProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   )
 }
 
