@@ -46,3 +46,11 @@ export async function signup(formData: FormData) {
 
   return redirect('/login?message=Check your email to confirm your account')
 }
+
+export async function signOut() {
+  const cookieStore = cookies()
+  const supabase = createServerActionClient({ cookies: () => cookieStore })
+  
+  await supabase.auth.signOut()
+  return redirect('/login')
+} 

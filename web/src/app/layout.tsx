@@ -1,27 +1,32 @@
-"use client"
+import './globals.css'
+import { Inter } from 'next/font/google'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { WalletContextProvider } from '@/contexts/WalletContext'
 
-import type { Metadata } from "next";
-import "./globals.css";
-import { SolanaProvider } from "@/components/SolanaProvider";
-import { Auth0Provider } from '@auth0/nextjs-auth0'
+const inter = Inter({ subsets: ['latin'] })
 
-// export const metadata: Metadata = {
-//   title: "Privment",
-//   description: "Evade the middleman",
-// };
+export const metadata = {
+  title: 'Privment',
+  description: 'Your private payment solution',
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
+
   return (
     <html lang="en">
-      <body>
-          <SolanaProvider>
-            {children}
-          </SolanaProvider>
+      <body className={inter.className}>
+        <WalletContextProvider>
+          {children}
+        </WalletContextProvider>
       </body>
     </html>
-  );
+  )
 }
