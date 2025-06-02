@@ -2,7 +2,7 @@
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { signup } from './actions'
 
@@ -23,10 +23,21 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
 
+  const emailRef = useRef<HTMLInputElement>(null)
+
   const router = useRouter()
   const supabase = createClientComponentClient()
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
+
+  const resetForm = () => {
+    setEmail('')
+    setPassword('')
+    setConfirmPassword('')
+    setError(null)
+    setSignupSuccess(false)
+    emailRef.current?.focus()
+  }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +63,9 @@ export default function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/home`,
+        },
       })
       if (error) throw error
     } catch (error: any) {
@@ -108,7 +121,7 @@ export default function AuthPage() {
         )}
 
         {signupSuccess ? (
-          <div className="flex flex-col items-center gap-4 p-6  bg-gray-50 rounded-xl shadow-md text-center text-white">
+          <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-xl shadow-md text-center text-white">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-600/10">
               <svg
                 className="w-6 h-6 text-green-500"
@@ -127,14 +140,15 @@ export default function AuthPage() {
             </p>
 
             <button
-              onClick={() => setMode('login')}
+              onClick={() => {
+                setMode('login')
+                resetForm()
+              }}
               className="mt-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-sm text-white font-medium rounded-md transition"
             >
               Back to Login
             </button>
           </div>
-
-
         ) : (
           <form
             onSubmit={mode === 'login' ? handleEmailSignIn : handleSignup}
@@ -145,12 +159,14 @@ export default function AuthPage() {
                 Email address
               </label>
               <input
+                ref={emailRef}
                 id="email"
                 name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoFocus
                 className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
               />
             </div>
@@ -178,29 +194,13 @@ export default function AuthPage() {
                       return (
                         <li
                           key={i}
-                          className={`flex items-center gap-2 ${passed ? 'text-green-600' : 'text-gray-500'
-                            }`}
+                          className={`flex items-center gap-2 ${passed ? 'text-green-600' : 'text-gray-500'}`}
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             {passed ? (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             ) : (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             )}
                           </svg>
                           <span>{rule.label}</span>
@@ -271,7 +271,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setError(null)
+                    resetForm()
                     setMode('signup')
                   }}
                   className="underline font-medium hover:text-gray-800"
@@ -285,7 +285,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setError(null)
+                    resetForm()
                     setMode('login')
                   }}
                   className="underline font-medium hover:text-gray-800"
