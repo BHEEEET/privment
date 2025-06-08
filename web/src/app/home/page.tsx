@@ -25,6 +25,8 @@ export default function HomePage() {
   const [client, setClient] = useState<PublicKey | null>(new PublicKey("9v3WYpy5R331ACJ5tPApn1nV12M4QdF4m4u6d4BvtRU3"))
   const [userAccountData, setUserAccountData] = useState<any | null>(null)
   const [invoiceData, setInvoiceData] = useState<any | null>(null)
+  const [email, setEmail] = useState("");
+
 
   const getCurrentWalletPublicKey = () => {
     if (externalPublicKey) return externalPublicKey
@@ -175,6 +177,10 @@ export default function HomePage() {
     if (authenticated && pubkey) {
       fetchUserAccount(pubkey)
       fetchInvoice(pubkey)
+      console.log(user)
+      setEmail(Array.isArray(user?.linkedAccounts)
+    ? user.linkedAccounts.map((acc: any) => acc.email).join("")
+    : "")
     }
   }, [authenticated, user, externalPublicKey])
 
@@ -213,8 +219,8 @@ export default function HomePage() {
       </div>
     )
   }
-
-  const displayName = user?.email ? String(user.email) : "Guest"
+  // Define displayName before the return so it's always available
+  const displayName = email ? email : (externalPublicKey ? externalPublicKey.toBase58() : "");
 
   return (
     <div className="min-h-screen bg-white text-white">
@@ -263,9 +269,9 @@ export default function HomePage() {
               <p><strong>Received:</strong> {userAccountData.totalReceived.toString()}</p>
               <p><strong>Address:</strong> {userAccountData.address}</p>
             </div>
-          ): (  <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
-              <h1 className='font-semibold'>User account not yet created</h1>
-            </div>)}
+          ) : (<div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
+            <h1 className='font-semibold'>User account not yet created</h1>
+          </div>)}
 
           <div className="flex gap-4 flex-wrap my-5">
             <button
@@ -285,9 +291,9 @@ export default function HomePage() {
               <p><strong>Client:</strong> {invoiceData.client.toString()}</p>
               <p><strong>Created at:</strong> {new Date(invoiceData.createdAt.toNumber() * 1000).toLocaleString()}</p>
             </div>
-          ): (  <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
-             <h1 className='font-semibold'>Invoice not yet created</h1>
-            </div>)}
+          ) : (<div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
+            <h1 className='font-semibold'>Invoice not yet created</h1>
+          </div>)}
         </div>
 
         <pre className="max-w-4xl bg-neutral-700 text-slate-50 font-mono p-4 text-xs sm:text-sm rounded-md mt-6 overflow-x-auto">
