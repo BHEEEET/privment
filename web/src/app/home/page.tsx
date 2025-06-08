@@ -255,7 +255,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          {userAccountData && (
+          {userAccountData ? (
             <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
               <h3 className="font-semibold mb-2">👤 On-chain User Account</h3>
               <p><strong>Name:</strong> {userAccountData.name}</p>
@@ -263,7 +263,9 @@ export default function HomePage() {
               <p><strong>Received:</strong> {userAccountData.totalReceived.toString()}</p>
               <p><strong>Address:</strong> {userAccountData.address}</p>
             </div>
-          )}
+          ): (  <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
+              <h1 className='font-semibold'>User account not yet created</h1>
+            </div>)}
 
           <div className="flex gap-4 flex-wrap my-5">
             <button
@@ -275,7 +277,7 @@ export default function HomePage() {
               Create Invoice
             </button>
           </div>
-          {invoiceData && (
+          {invoiceData ? (
             <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
               <h3 className="font-semibold mb-2">🧾 On-chain Invoice</h3>
               <p><strong>Address:</strong> {invoiceData.address}</p>
@@ -283,7 +285,9 @@ export default function HomePage() {
               <p><strong>Client:</strong> {invoiceData.client.toString()}</p>
               <p><strong>Created at:</strong> {new Date(invoiceData.createdAt.toNumber() * 1000).toLocaleString()}</p>
             </div>
-          )}
+          ): (  <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
+             <h1 className='font-semibold'>Invoice not yet created</h1>
+            </div>)}
         </div>
 
         <pre className="max-w-4xl bg-neutral-700 text-slate-50 font-mono p-4 text-xs sm:text-sm rounded-md mt-6 overflow-x-auto">
