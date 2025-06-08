@@ -6,25 +6,30 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useLogin } from "@privy-io/react-auth";
 
 export default function Home() {
-  const [session, setSession] = useState<any>(null)
+  //const [session, setSession] = useState<any>(null)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-    }
-    getSession()
+  // useEffect(() => {
+  //   const getSession = async () => {
+  //     const { data: { session } } = await supabase.auth.getSession()
+  //     setSession(session)
+  //   }
+  //   getSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  //     setSession(session)
+  //   })
 
-    return () => subscription.unsubscribe()
-  }, [supabase])
+  //   return () => subscription.unsubscribe()
+  // }, [supabase])
+
+  const { login } = useLogin({
+    onComplete: () => router.push("/home"),
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -41,12 +46,18 @@ export default function Home() {
         <div className="space-y-4">
           <p className="text-lg">Please sign in to access your dashboard</p>
           <br />
-          <Link
+          {/* <Link
             href="/login"
             className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-500"
           >
             Sign In
-          </Link>
+          </Link> */}
+          <button
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-500"
+            onClick={login}
+          >
+            Privy Log in
+          </button>
         </div>
       </div>
     </main>
