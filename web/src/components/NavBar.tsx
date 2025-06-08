@@ -16,7 +16,7 @@ export default function Navbar({ userEmail }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const router = useRouter()
   //const supabase = createClientComponentClient()
-  const {user, logout} = usePrivy();  
+  const { user, logout } = usePrivy();
 
   return (
     <nav className="border-b border-neutral-200 px-6 py-2 flex justify-between items-center shadow-sm bg-white">
@@ -27,7 +27,9 @@ export default function Navbar({ userEmail }: NavbarProps) {
 
       <div className="relative z-10">
         <div className="flex items-center gap-4">
-          <WalletMultiButton className="!bg-neutral-800 hover:!bg-neutral-700 !text-white border border-neutral-600 text-sm px-4 py-1 rounded-md transition" />
+          {user?.wallet?.connectorType == "solana_adapter" && (
+            <WalletMultiButton className="!bg-neutral-800 hover:!bg-neutral-700 !text-white border border-neutral-600 text-sm px-4 py-1 rounded-md transition" />
+          )}
 
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
@@ -46,9 +48,8 @@ export default function Navbar({ userEmail }: NavbarProps) {
           </button>
         </div>
         <div
-          className={`absolute right-0 mt-2 w-48 bg-white border border-neutral-200 rounded-xl shadow-xl text-sm text-neutral-800 overflow-hidden transition-all duration-200 origin-top ${
-            dropdownOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
-          }`}
+          className={`absolute right-0 mt-2 w-48 bg-white border border-neutral-200 rounded-xl shadow-xl text-sm text-neutral-800 overflow-hidden transition-all duration-200 origin-top ${dropdownOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+            }`}
         >
           <button
             onClick={() => {
