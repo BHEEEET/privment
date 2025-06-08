@@ -95,34 +95,34 @@ export default function HomePage() {
     setTimeout(() => fetchUserAccount(pubkey), 1000)
   }
 
-const handleAirdropSol = async () => {
-  const pubkey = getCurrentWalletPublicKey()
-  if (!pubkey) {
-    console.error("❌ No wallet connected")
-    return
+  const handleAirdropSol = async () => {
+    const pubkey = getCurrentWalletPublicKey()
+    if (!pubkey) {
+      console.error("❌ No wallet connected")
+      return
+    }
+
+    try {
+      const connection = new Connection(clusterApiUrl("devnet"), "confirmed")
+
+      console.log("⏳ Requesting airdrop...")
+      const sig = await connection.requestAirdrop(pubkey, 1 * LAMPORTS_PER_SOL)
+
+      const latestBlockhash = await connection.getLatestBlockhash()
+      await connection.confirmTransaction(
+        {
+          signature: sig,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        },
+        "confirmed"
+      )
+
+      console.log(`✅ Airdropped 1 SOL to ${pubkey.toBase58()}`)
+    } catch (err) {
+      console.error("❌ Airdrop failed:", err)
+    }
   }
-
-  try {
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed")
-
-    console.log("⏳ Requesting airdrop...")
-    const sig = await connection.requestAirdrop(pubkey, 1 * LAMPORTS_PER_SOL)
-
-    const latestBlockhash = await connection.getLatestBlockhash()
-    await connection.confirmTransaction(
-      {
-        signature: sig,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      },
-      "confirmed"
-    )
-
-    console.log(`✅ Airdropped 1 SOL to ${pubkey.toBase58()}`)
-  } catch (err) {
-    console.error("❌ Airdrop failed:", err)
-  }
-}
 
 
 
@@ -274,17 +274,16 @@ const handleAirdropSol = async () => {
             >
               Create Invoice
             </button>
-
-            {invoiceData && (
-              <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
-                <h3 className="font-semibold mb-2">🧾 On-chain Invoice</h3>
-                <p><strong>Address:</strong> {invoiceData.address}</p>
-                <p><strong>Amount:</strong> {invoiceData.amount.words[0]}</p>
-                <p><strong>Client:</strong> {invoiceData.client.toString()}</p>
-                <p><strong>Created at:</strong> {new Date(invoiceData.createdAt.toNumber() * 1000).toLocaleString()}</p>
-              </div>
-            )}
           </div>
+          {invoiceData && (
+            <div className="mt-6 bg-neutral-100 text-black p-4 rounded-md border border-neutral-300">
+              <h3 className="font-semibold mb-2">🧾 On-chain Invoice</h3>
+              <p><strong>Address:</strong> {invoiceData.address}</p>
+              <p><strong>Amount:</strong> {invoiceData.amount.words[0]}</p>
+              <p><strong>Client:</strong> {invoiceData.client.toString()}</p>
+              <p><strong>Created at:</strong> {new Date(invoiceData.createdAt.toNumber() * 1000).toLocaleString()}</p>
+            </div>
+          )}
         </div>
 
         <pre className="max-w-4xl bg-neutral-700 text-slate-50 font-mono p-4 text-xs sm:text-sm rounded-md mt-6 overflow-x-auto">
