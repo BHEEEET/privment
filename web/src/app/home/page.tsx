@@ -20,7 +20,7 @@ export default function HomePage() {
   const { wallet, publicKey: externalPublicKey, signTransaction } = useWallet()
   const { createWallet } = useSolanaWallets();
 
-  const usingExternalWallet = !!(wallet && signTransaction && externalPublicKey)
+  const usingExternalWallet = !(user?.wallet?.connectorType === "embedded")
 
   const [client, setClient] = useState<PublicKey | null>(new PublicKey("9v3WYpy5R331ACJ5tPApn1nV12M4QdF4m4u6d4BvtRU3"))
   const [userAccountData, setUserAccountData] = useState<any | null>(null)
@@ -29,9 +29,8 @@ export default function HomePage() {
 
 
   const getCurrentWalletPublicKey = () => {
-    if (externalPublicKey) return externalPublicKey
-    if (user?.wallet?.address) return new PublicKey(user.wallet.address)
-    return null
+    if (user?.wallet?.connectorType ==  "embedded") return new PublicKey(user.wallet.address)
+    else return externalPublicKey
   }
 
   const getUserAccountPDA = (pubkey: PublicKey, programId: PublicKey) =>
@@ -45,8 +44,10 @@ export default function HomePage() {
       const { program } = await getAnchorClient(pubkey)
       const userAccount = getUserAccountPDA(pubkey, program.programId)
       const data = await program.account.userAccount.fetch(userAccount)
+      console.log(data)
       setUserAccountData({ ...data, address: userAccount.toBase58() })
     } catch (err) {
+      console.log("ERROR USER")
       console.warn("No user account found yet.")
     }
   }
@@ -56,8 +57,10 @@ export default function HomePage() {
       const { program } = await getAnchorClient(pubkey)
       const invoice = getInvoicePDA(pubkey, program.programId)
       const data = await program.account.invoice.fetch(invoice)
+      console.log(data)
       setInvoiceData({ ...data, address: invoice.toBase58() })
     } catch (err) {
+        console.log("ERROR INVOICE")
       console.warn("No invoice found yet.")
     }
   }
@@ -89,6 +92,9 @@ export default function HomePage() {
           transaction: tx,
           connection,
           address: user?.wallet?.address!,
+          transactionOptions:{
+            skipPreflight: false
+          }
         })
       ).signature
     }
@@ -139,7 +145,6 @@ export default function HomePage() {
       .accounts({
         client: payer,
         creator: payer, // or whatever signer your program expects
-        systemProgram: SystemProgram.programId,
       })
       .instruction()
 
@@ -175,7 +180,9 @@ export default function HomePage() {
   useEffect(() => {
     const pubkey = getCurrentWalletPublicKey()
     if (authenticated && pubkey) {
+      console.log("fetching useraccount...")
       fetchUserAccount(pubkey)
+      console.log("fetching invoice...")
       fetchInvoice(pubkey)
       console.log(user)
       setEmail(Array.isArray(user?.linkedAccounts)
